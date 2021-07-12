@@ -1,0 +1,968 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Catallaxy Services | Where We're Going, We Don't Need Servers</title>
+
+		<link rel="stylesheet" href="../reveal.js/dist/reset.css">
+		<link rel="stylesheet" href="../reveal.js/dist/reveal.css">
+		<link rel="stylesheet" href="../reveal.js/dist/theme/black.css" id="theme">
+		<link rel="stylesheet" href="../WebsiteAssets/mods.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="../reveal.js/plugin/highlight/monokai.css" id="highlight-theme">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-background-image="presentation/assets/background/delorean.jpg" data-background-opacity="0.2">
+					<h2>Where We're Going, We Don't Need Servers</h2>
+					<h3>Serverless SQL Pools in Azure Synapse Analytics</h3>
+					
+					<a href="https://www.catallaxyservices.com">Kevin Feasel</a> (<a href="https://twitter.com/feaselkl">@feaselkl</a>)<br />
+					<a href="http://CSmore.info/on/serverless">http://CSmore.info/on/serverless</a>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Who Am I?  What Am I Doing Here?</h3>
+					<div class="container">
+						<div class="col">
+							<table class="whoami">
+								<tr>
+									<td><a href="https://csmore.info"><img src="../WebsiteAssets/Logo.png" height="100" /></a></td>
+									<td nowrap><a href="https://csmore.info">Catallaxy Services</a></td>
+								</tr>
+								<tr>
+									<td><a href="https://curatedsql.com"><img src="../WebsiteAssets/CuratedSQLLogo.png" height="100" /></a></td>
+									<td nowrap><a href="https://curatedsql.com">Curated SQL</a></td>
+								</tr>
+								<tr>
+									<td><a href="https://csmore.info/on/training"><img src="../WebsiteAssets/Teachable.png" height="120" /></a></td>
+									<td nowrap><a href="https://csmore.info/on/training">Training on Teachable</a></td>
+								</tr>
+							</table>
+						</div>
+						<div class="col">
+							<a href="http://www.twitter.com/feaselkl"><img src="../WebsiteAssets/HeadShot.jpg" height="358" width="315" /></a>
+							<br />
+							<a href="http://www.twitter.com/feaselkl">@feaselkl</a>
+						</div>					
+					</div>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/motivation.jpg" data-background-opacity="0.2">
+					<h3>Motivation</h3>
+					
+					<p>My goals in this talk:</p>
+					
+					<ul>
+						<li>Understand what Azure Synapse Analytics serverless SQL pools are.</li>
+						<li>Load data into a serverless SQL pool.</li>
+						<li>Query data in serverless SQL pools.</li>
+						<li>Get a feeling for how much all of this will cost.</li>
+					</ul>
+				</section>
+
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li class="active">An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/warehouse.jpg" data-background-opacity="0.2">
+					<h3>Azure Synapse Analytics</h3>
+					
+					<p>Azure Synapse Analytics is Microsoft's platform for modern data warehousing.  It is made up of three components:</p>
+					
+					<div class="container">
+						<div class="col">
+							<ul>
+								<li>Dedicated SQL pools</li>
+								<li>Spark pools</li>
+								<li>Serverless SQL pools</li>
+							</ul>
+						</div>
+						<div class="col">
+							<img src="presentation/assets/image/pools.png"  />
+						</div>					
+					</div>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/blueprints.jpg" data-background-opacity="0.2">
+					<h3>Dedicated SQL pools</h3>
+					
+					<p>Azure Synapse Analytics dedicated SQL pools, nee Azure SQL Data Warehouse, offer up a Massive Parallel Processing approach to data warehousing and work best in classic data warehousing scenarios:</p>
+
+					<ul>
+						<li>You are using the Kimball model of facts and dimensions.</li>
+						<li>Your total data size is at least 1 TB.</li>
+						<li>Your major fact tables have at least 1 billion rows of date and numeric data.</li>
+						<li>Your major dimension tables are relatively small but wide.</li>
+						<li>Users typically work off of a set number of queries.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/sparkler.jpg" data-background-opacity="0.2">
+					<h3>Spark pools</h3>
+					
+					<p>Azure Synapse Analytics Spark pools allow you to spin up Apache Spark clusters.  Key use cases for these Spark clusters include:</p>
+
+					<ul>
+						<li>Complicated data transformation projects, such as working with regular expressions.</li>
+						<li>Distributed machine learning tasks not suited for Azure Machine Learning.</li>
+						<li>Migrating work from on-premises Apache spark clusters or HDInsight clusters.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/muay-thai.jpg" data-background-opacity="0.2">
+					<h3>Serverless vs Dedicated SQL pools</h3>
+					
+					<p>Azure Synapse Analytics serverless SQL pools are a bit different from dedicated SQL pools in the following ways:</p>
+
+					<ul>
+						<li>Serverless SQL pools do <strong>not</strong> store data.  They read files directly from your data lake and expose them as SQL tables.</li>
+						<li>Serverless SQL pools require no infrastructure or resource reservation and have no up-front costs.</li>
+						<li>The pricing model for serverless SQL pools is based on data utilization:  approximately $5 per terabyte of data processed.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/magnifying-glass.jpg" data-background-opacity="0.2">
+					<h3>Serverless SQL pools</h3>
+					
+					<p>Key use cases for Azure Synapse Analytics serverless SQL pools include:</p>
+
+					<ul>
+						<li>Data "spelunking:"  investigatory work on data in the data lake.</li>
+						<li>Logical data warehousing:  virtualization of data stored in Azure Data Lake Storage and Cosmos DB.</li>
+						<li>Simple data transformations and cleanup as part of data curation.</li>
+						<li>Reviewing data processed in Spark pools.</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li class="active">Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>The Built-In Pool</h3>
+					
+					<p>Each Azure Synapse Analytics workspace comes with a built-in serverless pool.</p>
+
+					<img src="presentation/assets/image/built-in-pool.png" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Creating a New Serverless Pool</h3>
+					
+					<img src="presentation/assets/image/new-sql-pool.png" />
+					
+					<p>You <strong>cannot</strong> create additional serverless SQL pools.  Although there is an option to create a new SQL pool, it only allows you to create dedicated SQL pools.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Destroying or Deleting a Serverless SQL Pool</h3>
+					
+					<img src="presentation/assets/image/delete-serverless-sql-pool.png" height="300" />
+
+					<p>Similarly, you <strong>cannot</strong> delete a serverless SQL pool.  But if you don't use the serverless SQL pool to retrieve data, you never get charged for it.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li class="active">Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/desert.jpg" data-background-opacity="0.2">
+					<h3>Our Scenario</h3>
+					
+					<p>We work for an agency known as Martian Agricultural Data Collection and Ownership (MADCOW).</p>
+
+					<p>Our job is to collect sensor data from agricultural plots in several Martian cities in order better to understand which plots of land are best suited for specific crops.</p>
+					
+					<p>Our system has collected a significant amount of IoT sensor data and management would like us to build a rapid access system for reviewing this data.  We have chosen Azure Synapse Analytics serverless SQL pools for the job.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/telephones.jpg" data-background-opacity="0.2">
+					<h3>What Language Do We Use?</h3>
+					
+					<p>Serverless SQL pools allow you to write T-SQL queries.  But the product does not support the entire T-SQL namespace.</p>
+					
+					<p>One major reason for this is that serverless SQL pools are (almost entirely) <strong>read-only</strong>.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>How Do We Load Data if Serverless SQL Pools Are Read-Only?</h3>
+					
+					<div class="container">
+						<div class="col">
+							<p>The easiest way to access data from a serverless SQL pool is to load it from Azure Data Lake Storage.</p>
+					
+							<p>Every Azure Synapse Analytics workspace has an associated data lake storage account.</p>
+						</div>
+						<div class="col">
+							<img src="presentation/assets/image/data-lake-storage.png" />
+						</div>					
+					</div>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Bulking Up the SQL Pool with OPENROWSET</h3>
+					
+					<p>The <code>OPENROWSET</code> command allows you to read data from a file or folder.</p>
+					
+					<pre><code data-line-numbers="|2-9|10-15" data-trim><script type="text/template">
+					SELECT TOP(10) *
+					FROM OPENROWSET
+					(
+						BULK 'abfss://.../marsfarming_raw/ArabilityScore/ArabilityScore_1.txt',
+						FORMAT = 'CSV',
+						PARSER_VERSION = '2.0',
+						FIELDTERMINATOR = ';',
+						FIRSTROW = 1
+					)
+					WITH
+					(
+						PlotID INT,
+						ReportDateTime DATETIME2(0),
+						ArabilityScore DECIMAL(3,2)
+					) AS [arability];
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/folders.jpg" data-background-opacity="0.2">
+					<h3>OPENROWSET:  Supported File Types</h3>
+					
+					<p>The <code>OPENROWSET</code> command supports the following data types:</p>
+					
+					<ul>
+						<li>CSV (or other delimited file)</li>
+						<li>Parquet</li>
+						<li>JSON</li>
+						<li>Delta Lake</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/lake.jpg" data-background-opacity="0.2">
+					<h3>Delta Lake</h3>
+					
+					<p>Azure Synapse Analytics has some support for the Linux Foundation's Delta Lake (gifted by Databricks).  Delta Lake has several beneficial features:</p>
+					
+					<ul>
+						<li>ACID-like serializable transaction support</li>
+						<li>"Time travel:"  ability to view the history of a record, including reverting rows if needed</li>
+						<li>Schema enforcement via use of the Parquet file format</li>
+						<li>Insert, update, delete, and merge capabilities (including via Spark SQL)</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/web.jpg" data-background-opacity="0.2">
+					<h3>External Tables with PolyBase</h3>
+					
+					<p>Azure Synapse Analytics extends a Microsoft technology called PolyBase, which allows you to virtualize data from a number of different data platform technologies.  The most important one for our use case is, again, Azure Data Lake Storage Gen2.</p>
+
+					<p>For more on PolyBase itself, go to <a href="https://csmore.info/on/polybase">https://csmore.info/on/polybase</a>.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/tags.jpg" data-background-opacity="0.2">
+					<h3>External Objects</h3>
+					
+					<p>Three sorts of external objects exist.</p>
+					
+					<ol>
+						<li>External Data Source</li>
+						<li>External File Format</li>
+						<li>External Table</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/lab.jpg" data-background-opacity="0.2">
+					<h3>External Data Source</h3>
+					
+					<p>An external data source tells the serverless SQL pool where it can find remote data.</p>
+
+					<p>That data does <strong>not</strong> migrate to the serverless SQL pool!  It lives on the external data source.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|1|3|4" data-trim><script type="text/template">
+					CREATE EXTERNAL DATA SOURCE DataLake WITH
+					(
+						LOCATION = N'https://.../synapse/marsfarming_curated',
+						CREDENTIAL = [SasTokenWrite]
+					);
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|1|2|3" data-trim><script type="text/template">
+					CREATE DATABASE SCOPED CREDENTIAL [SasTokenWrite]
+						WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+						SECRET = '<Generated SAS token>';
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/paper-stack.jpg" data-background-opacity="0.2">
+					<h3>External File Format</h3>
+					
+					<p>An external file format tells the serverless SQL pool what type of file you intend to use from our data lake.  We can use delimited files (e.g., comma or tab separated), ORC, and Parquet formats.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|1|3|4-10" data-trim><script type="text/template">
+					CREATE EXTERNAL FILE FORMAT CsvFileFormat WITH
+					(
+						FORMAT_TYPE = DELIMITEDTEXT,
+						FORMAT_OPTIONS
+						(
+							FIELD_TERMINATOR = N',',
+							USE_TYPE_DEFAULT = True,
+							STRING_DELIMITER = '"',
+							ENCODING = 'UTF8'
+						)
+					);
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|3|4" data-trim><script type="text/template">
+					CREATE EXTERNAL FILE FORMAT [ParquetFileFormat] WITH
+					(
+						FORMAT_TYPE = PARQUET,
+						DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'
+					);
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/table.jpg" data-background-opacity="0.2">
+					<h3>External Table</h3>
+					
+					<p>An external table tells your serverless SQL pool the structure of your external resource.  Serverless SQL pools require <strong>structured</strong> data and will reject records which do not fit the data types and sizes you set.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|1|1-6|7-11|8|9|10" data-trim><script type="text/template">
+					CREATE EXTERNAL TABLE [dbo].[ArabilityEXT_212001]
+					(
+						PlotID INT,
+						ReportDateTime DATETIME2(0),
+						ArabilityScore NUMERIC(3,2)
+					)
+					WITH (
+							LOCATION = 'ArabilityScore/2120/01/',
+							DATA_SOURCE = [MarsFarmingCurated],
+							FILE_FORMAT = [ParquetFileFormat]
+					);
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/handshake.jpg" data-background-opacity="0.2">
+					<h3>Combined Arms</h3>
+					
+					<p>You can combine the <code>OPENROWSET</code> approach with PolyBase's <code>CREATE EXTERNAL TABLE AS</code> (CETAS) in order to shape external tables before creation.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|1|1-5|6-14|9|10|11-13|15-20|21-23" data-trim><script type="text/template">
+					CREATE EXTERNAL TABLE [dbo].[Arability_211601] WITH (
+							LOCATION = 'ArabilityScore/2116/01/',
+							DATA_SOURCE = [MarsFarmingCurated],
+							FILE_FORMAT = [ParquetFileFormat]
+					) AS
+					SELECT *
+					FROM OPENROWSET
+					(
+						BULK 'abfss://.../marsfarming_raw/ArabilityScore/*.txt',
+						FORMAT = 'CSV',
+						PARSER_VERSION = '2.0',
+						FIELDTERMINATOR = ';',
+						FIRSTROW = 1
+					)
+					WITH
+					(
+						PlotID INT,
+						ReportDateTime DATETIME2(0),
+						ArabilityScore DECIMAL(3,2)
+					) AS [arability]
+					WHERE
+						YEAR(ReportDateTime) = 2116
+						AND MONTH(ReportDateTime) = 1;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li class="active">Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/fishing.jpg" data-background-opacity="0.2">
+					<h3>Spelunking</h3>
+					
+					<p>Serverless SQL pools are great for ad hoc data exploration.  They allow you to query arbitrary files or folders within a data lake, shape that data using T-SQL, and display or export the data in several ways.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/magnifying-glass.jpg" data-background-opacity="0.2">
+					<h3>Filepath Searches</h3>
+					
+					<p><code>OPENROWSET</code> queries may load data from a single file.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<pre><code data-line-numbers="|4" data-trim><script type="text/template">
+					SELECT TOP(10) *
+					FROM OPENROWSET
+					(
+						BULK 'abfss://.../marsfarming_raw/ArabilityScore/ArabilityScore_1.txt',
+						FORMAT = 'CSV',
+						PARSER_VERSION = '2.0',
+						FIELDTERMINATOR = ';',
+						FIRSTROW = 1
+					)
+					WITH
+					(
+						PlotID INT,
+						ReportDateTime DATETIME2(0),
+						ArabilityScore DECIMAL(3,2)
+					) AS [arability];
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>Using wildcard characters like "*" we can change that to include a variety of files.</p>
+					
+					<pre><code data-line-numbers="1|2|3" data-trim><script type="text/template">
+					BULK 'abfss://synapse@.../marsfarming_raw/ArabilityScore/*'
+					BULK 'abfss://synapse@.../marsfarming_raw/ArabilityScore/ArabilityScore_*.txt'
+					BULK 'abfss://synapse@.../marsfarming_raw/ArabilityScore/ArabilityScore_1.*'
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>Going further, we can use <code>FILEPATH()</code> and <code>FILENAME()</code> to get details on a file.</p>
+					
+					<pre><code data-line-numbers="|7|2,3,10" data-trim><script type="text/template">
+					SELECT
+						arability.filename() AS FileName,
+						COUNT_BIG(*) AS NumberOfRows
+					FROM  
+						OPENROWSET
+						(
+							BULK '.../marsfarming_curated/ArabilityScore/2120/01/*.parquet',
+							FORMAT='PARQUET'
+						) arability
+					GROUP BY arability.filename();
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>The end result is a listing of numbers of rows per file.</p>
+					
+					<img src="presentation/assets/image/rows-per-file.png" height="400" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>But we can include more than one wildcard and can even reference them in the query itself using <code>FILEPATH()</code>.</p>
+					
+					<pre><code data-line-numbers="|8|2-4,11-13" data-trim><script type="text/template">
+					SELECT
+						arability.filepath(1) AS Year,
+						arability.filepath(2) AS Month,
+						COUNT_BIG(*) AS NumberOfRows
+					FROM  
+						OPENROWSET
+						(
+							BULK '.../marsfarming_curated/ArabilityScore/*/*/*.parquet',
+							FORMAT='PARQUET'
+						) arability
+					GROUP BY
+						arability.filepath(1),
+						arability.filepath(2)
+					ORDER BY
+						NumberOfRows DESC;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>This lets us analyze data even in the case in which we don't specify year or month in the files themselves--just by virtue of being in the right folder, we can get relevant context!</p>
+					
+					<img src="presentation/assets/image/rows-per-month.png" height="400" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>We can even use these in the <code>WHERE</code> clause to filter:</p>
+					
+					<pre><code data-line-numbers="|11-12" data-trim><script type="text/template">
+					SELECT
+						arability.filepath(1) AS Year,
+						arability.filepath(2) AS Month,
+						COUNT_BIG(*) AS NumberOfRows
+					FROM  
+						OPENROWSET
+						(
+							BULK '.../marsfarming_curated/ArabilityScore/*/*/*.parquet',
+							FORMAT='PARQUET'
+						) arability
+					WHERE
+						arability.filename() LIKE N'C%'
+					GROUP BY
+						arability.filepath(1),
+						arability.filepath(2)
+					ORDER BY
+						NumberOfRows DESC;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Filepath Searches</h3>
+					
+					<p>In this case, we filter to include only files which start with the letter "C" and ignore all other files.</p>
+					
+					<img src="presentation/assets/image/rows-per-month-letter-c.png" height="400" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Data Exportation</h3>
+					
+					<p>Azure Synapse Analytics queries be exported directly to CSV, JSON, or XML.</p>
+					
+					<img src="presentation/assets/image/export-results.png" height="400" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Data Visualization</h3>
+					
+					<p>Azure Synapse Analytics includes a charting library similar to that in Azure Data Studio.</p>
+					
+					<img src="presentation/assets/image/chart-view.png" height="400" />
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li class="active">Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>The Logical Data Warehouse</h3>
+					
+					<p>Historically, we have built physical data warehouses as a way of storing data for solving known business problems.  We can also create logical (virtual) data warehouses and query from separate systems when that makes sense.</p>
+					
+					<img src="presentation/assets/image/Datawarehouse_reference_architecture.jpg" height="350" />
+				</section>
+				
+				<section data-background-image="presentation/assets/background/warehouse-water.jpg" data-background-opacity="0.2">
+					<h3>The Data Lakehouse</h3>
+					
+					<p>Databricks has coined the term Lakehouse to represent the combination of data warehouse and data lake in one managed area.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>The Data Lakehouse</h3>
+					
+					<img src="presentation/assets/image/data-lakehouse.png" height="450" />
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>The Logical Data Warehouse</h3>
+					
+					<div class="container">
+						<div class="col">
+							<p>A logical data warehouse in a serverless SQL pool isn't exactly the same thing as the Data Lakehouse, but there are some similarities in approach.</p>
+						</div>
+						<div class="col">
+							<img src="presentation/assets/image/logical-data-warehouse.png" height="450" />
+						</div>					
+					</div>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li class="active">Securing Data</li>
+						<li>Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/stoplight.jpg" data-background-opacity="0.2">
+					<h3>Security Options</h3>
+					
+					<p>Serverless SQL pools don't have the same breadth of security options and roles as on-premises SQL Server instances, but there are still ways to control access to data.</p>
+					
+					<ul>
+						<li>Controlling the underlying data</li>
+						<li>Role-based security</li>
+						<li>Access to objects or schemas</li>
+						<li>Administer Database Bulk Operations</li>
+						<li>Granting Control</li>
+						<li>Row-level security</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Controlling the Underlying Data</h3>
+					
+					<p>The easiest way to grant access to files or folders in a Data Lake is to generate a SAS token.</p>
+					
+					<img src="presentation/assets/image/generate-sas-token.png" height="450" />
+					
+					<p>SAS tokens can expire after a set amount of time and have specific rights.  For our needs, we want at least Read and List permissions.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Controlling the Underlying Data</h3>
+					
+					<p>You may have several tokens available to a serverless SQL pool as database scoped credentials.</p>
+					
+					<pre><code data-trim><script type="text/template">
+					CREATE DATABASE SCOPED CREDENTIAL [SasTokenWrite]
+						WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+						SECRET = '<Generated SAS token>';
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Role-Based Security</h3>
+					
+					<p>Serverless SQL pools allow you to create distinct roles and assign users to them, just as you can on-premises.</p>
+					
+					<pre><code data-line-numbers="|1-3|4" data-trim><script type="text/template">
+					CREATE ROLE Analysts;
+					CREATE ROLE Spelunkers;
+					CREATE ROLE Administrators;
+					ALTER ROLE Administrators ADD MEMBER [kevin@MADCOW.mars];
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Access to Objects or Schemas</h3>
+					
+					<p>You may <code>GRANT</code> permissions to specific objects or schemas.  This is a good option for regular users who just need to query tables in a logical data warehouse.</p>
+					
+					<pre><code data-line-numbers="|1|2|3" data-trim><script type="text/template">
+					GRANT SELECT ON OBJECT::[MyView] TO Analysts;
+					GRANT SELECT ON SCHEMA::[dbo] TO Analysts;
+					GRANT REFERENCES ON CREDENTIAL [SasTokenWrite] TO Analysts;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Administer Bulk Database Operations</h3>
+					
+					<p>In order to allow users to view data using <code>OPENROWSET</code>, you will need to grant rights for bulk database operations, as <code>OPENROWSET</code> is a bulk operation in SQL Server.</p>
+					
+					<pre><code data-trim><script type="text/template">
+					GRANT ADMINISTER DATABASE BULK OPERATIONS TO Spelunkers;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Granting Control</h3>
+					
+					<p>Just as on-premises, the <code>CONTROL</code> permission is very strong.  It allows a user to set up permissions, create (or destroy) external tables or views, and query data via <code>OPENROWSET</code>.  Save this for administrators or power users.</p>
+					
+					<pre><code data-trim><script type="text/template">
+					GRANT CONTROL TO Administrators;
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Row-Level Security</h3>
+					
+					<p>We can also control access to specific rows in data based on role.  Unlike SQL Server on-premises, there is no native row-level security.  We can, however, create it via views and (optional) table-valued functions.</p>
+					
+					<p>Suppose we have specific analysts by city.</p>
+					
+					<pre><code data-trim><script type="text/template">
+					CREATE ROLE NorthArmstrongAnalysts;
+					ALTER ROLE NorthArmstrongAnalysts ADD MEMBER [fritz@MADCOW.mars];
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Row-Level Security</h3>
+					
+					<pre><code data-line-numbers="|1-2|3-5|6-13" data-trim><script type="text/template">
+					CREATE OR ALTER VIEW dbo.Arability AS
+					SELECT *
+					FROM OPENROWSET(
+						BULK '.../marsfarming_curated/ArabilityScore/*/*/*.parquet',
+						FORMAT = 'Parquet') AS ROWS
+					WHERE
+						SUSER_SNAME() = 'kevin@MADCOW.mars'
+						OR ( IS_ROLEMEMBER('NorthArmstrongAnalysts', SUSER_SNAME()) = 1
+							AND CityName = 'North Armstrong')
+						OR ( IS_ROLEMEMBER('DustValleyAnalysts', SUSER_SNAME()) = 1
+							AND CityName = 'Dust Valley')
+						OR ( IS_ROLEMEMBER('RockyShoalsAnalysts', SUSER_SNAME()) = 1
+							AND CityName = 'Rocky Shoals')
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Row-Level Security</h3>
+					
+					<p>Another option is to wrap the security in an inline table-valued function.</p>
+					
+					<pre><code data-line-numbers="|1-2|4-12" data-trim><script type="text/template">
+					CREATE OR ALTER FUNCTION dbo.CityAnalyst(@CityName NVARCHAR(50))
+					RETURNS TABLE
+					RETURN (
+						SELECT condition = 1
+						WHERE
+							SUSER_SNAME() = 'kevin@MADCOW.mars'
+							OR ( IS_ROLEMEMBER('NorthArmstrongAnalysts', SUSER_SNAME()) = 1
+								AND CityName = 'North Armstrong')
+							OR ( IS_ROLEMEMBER('DustValleyAnalysts', SUSER_SNAME()) = 1
+								AND CityName = 'Dust Valley')
+							OR ( IS_ROLEMEMBER('RockyShoalsAnalysts', SUSER_SNAME()) = 1
+								AND CityName = 'Rocky Shoals')
+					);						
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Row-Level Security</h3>
+					
+					<p>We can then use <code>CROSS APPLY</code> to apply the security rules.</p>
+					
+					<pre><code data-trim><script type="text/template">
+					CREATE OR ALTER VIEW secure.Arability AS
+					SELECT a.*
+					FROM dbo.Arability a
+						CROSS APPLY dbo.CityAnalyst(CityName);
+					</script></code></pre>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Agenda</h3>
+					
+					<ol>
+						<li>An Overview</li>
+						<li>Creating a Serverless SQL Pool</li>
+						<li>Querying Data</li>
+						<li>Spelunking and Data Analysis</li>
+						<li>Building a Logical Data Warehouse</li>
+						<li>Securing Data</li>
+						<li class="active">Financing the Endeavor</li>
+					</ol>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/coins.jpg" data-background-opacity="0.2">
+					<h3>How Much Does this Cost?</h3>
+					
+					<p>The different components of Azure Synapse Analytics are priced differently.  Although dedicated SQL pools and Spark pools are priced by server utilization, serverless SQL pools are priced by data processed, at a rate of approximately $5 per terabyte processed.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/process.jpg" data-background-opacity="0.2">
+					<h3>What Does it Mean to Process Data?</h3>
+					
+					<p>Data processing includes data read, metadata read, data in intermediate storage during queries (e.g., spools or temp tables), data written to storage via CETAS, and data transferred between nodes or out to the end user.</p>
+					
+					<p>Each query has a minimum of <strong>10 MB</strong> of data processed.  As such, try to avoid an enormous number of small queries off of tiny files, as those will add up quickly.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/calculator.jpg" data-background-opacity="0.2">
+					<h3>How Do We Save Money?</h3>
+					
+					<p>We know that scanning the minimum amount of data necessary is a key for maximizing performance.  It's also our key for saving money here.  Serverless SQL pools offer a few techniques for doing this:</p>
+					
+					<ul>
+						<li>Using the right file format</li>
+						<li>Returning smaller result sets</li>
+						<li>Filename and file path filtering</li>
+						<li>Pre-calculating frequently used aggregates</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/collection.jpg" data-background-opacity="0.2">
+					<h3>Use the Right Format</h3>
+					
+					<p>Typically, Parquet format will be superior to CSVs for handling data in a data lake.  This is for a few reasons:</p>
+					
+					<ul>
+						<li>Parquet compresses data to a smaller size than CSV</li>
+						<li>Parquet includes column metadata, making querying easier</li>
+						<li>With Parquet, you only read in the columns you need--it's a columnar format</li>
+					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/records.jpg" data-background-opacity="0.2">
+					<h3>Return Smaller Result Sets</h3>
+					
+					<p>The downside to compression is that data is returned back in result sets <strong>uncompressed</strong>.</p>
+					
+					<p>If your query reads 1 TB of Parquet data and the compression ratio is 5:1 and your query returns back the entirety of this data, you will be charged for 1 TB of compressed data read from disk <strong>plus</strong> 5 TB of data transferred out, or 6 TB in total.</p>
+					
+					<p>By contrast, aggregating the data will result in much smaller result sets and lower prices.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/filter.jpg" data-background-opacity="0.2">
+					<h3>Perform Filename and File Path Filtering</h3>
+					
+					<p>Using filters on <code>FILENAME()</code> and <code>FILEPATH()</code> can allow you to narrow down which files to read and what data to return.</p>
+					
+					<p>Furthermore, when using <code>OPENROWSET</code> for ad hoc queries, narrow down to the smallest number of folders or files needed to get the job done.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/data.jpg" data-background-opacity="0.2">
+					<h3>Pre-Calculate Frequently Used Aggregates</h3>
+					
+					<p>If you have frequently used aggregates, it may make sense to calculate them once and store the results in files for later use.  In that case, you will incur a one-time charge to calculate the aggregates but then a small charge (down to 10 MB of data processed) per access.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/plan.jpg" data-background-opacity="0.2">
+					<h3>Pre-Processing Data</h3>
+					
+					<p>Sometimes, in order to improve performance, serverless SQL pools will process more data than absolutely necessary.  For example, the CSV reader pulls in data in chunks, and although you only asked for 5 rows, the chunk might contain 50 or 100.  The net effects of this are typically small, but can add up with a large number of queries.</p>
+					
+					<p>To reduce this, store data in Parquet format and write queries which intend to read from an entire file rather than part of the file.  This might include reshaping files in your data lake.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/reading-a-book.jpg" data-background-opacity="0.2">
+					<h3>Calculating Data Processed</h3>
+					
+					<p>Each serverless SQL pool has an associated DMV which calculates the amount of data processed:  <code>sys.dm_external_data_processed</code>.</p>
+				</section>
+
+				<section data-background-image="presentation/assets/background/demo.jpg" data-background-opacity="0.2">
+					<h3>Demo Time</h3>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/wrappingup.jpg" data-background-opacity="0.2">
+					<h3>Wrapping Up</h3>
+					
+					<p>This has been a look at serverless SQL pools in Azure Synapse Analytics.  Although they are in the SQL Server family, they're closer to second cousins with on-premises SQL Server rather than twins.</p>
+				</section>
+				
+				<section data-background-image="presentation/assets/background/wrappingup.jpg" data-background-opacity="0.2">
+					<h3>Wrapping Up</h3>
+					
+					<p>
+						To learn more, go here:
+						<br />
+						<a href="https://csmore.info/on/serverless">https://CSmore.info/on/serverless</a>
+					</p>
+					<br />
+					<p>
+						And for help, contact me:
+						<br />
+						<a href="mailto:feasel@catallaxyservices.com">feasel@catallaxyservices.com</a> | <a href="https://www.twitter.com/feaselkl">@feaselkl</a>
+					</p>
+					<br />
+					<p>
+						Catallaxy Services consulting:
+						<br />
+						<a href="https://csmore.info/contact">https://CSmore.info/on/contact</a>
+					</p>
+				</section>
+			</div>
+		</div>
+
+		<script src="../reveal.js/dist/reveal.js"></script>
+		<script src="../reveal.js/plugin/zoom/zoom.js"></script>
+		<script src="../reveal.js/plugin/notes/notes.js"></script>
+		<script src="../reveal.js/plugin/search/search.js"></script>
+		<script src="../reveal.js/plugin/markdown/markdown.js"></script>
+		<script src="../reveal.js/plugin/math/math.js"></script>
+		<script src="../reveal.js/plugin/menu/menu.js"></script>
+		<script src="../reveal.js/plugin/highlight/highlight.js"></script>
+		<script src="../reveal.js/plugin/chart/Chart.min.js"></script>
+		<script src="../reveal.js/plugin/chart/plugin.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				width: '70%',
+				controls: true,
+				progress: true,
+				center: true,
+				hash: true,
+				transition: 'fade',
+				
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath, RevealMenu, RevealChart ]
+			});
+		</script>
+	</body>
+</html>
