@@ -19,7 +19,7 @@
 			<div class="slides">
 				<section data-background-image="presentation/assets/background/delorean.jpg" data-background-opacity="0.2">
 					<h2>Where We're Going, We Don't Need Servers</h2>
-					<h3>Serverless SQL Pools in Azure Synapse Analytics</h3>
+					<h3>The Serverless SQL Pool in Azure Synapse Analytics</h3>
 					
 					<a href="https://www.catallaxyservices.com">Kevin Feasel</a> (<a href="https://twitter.com/feaselkl">@feaselkl</a>)<br />
 					<a href="http://CSmore.info/on/serverless">http://CSmore.info/on/serverless</a>
@@ -58,9 +58,9 @@
 					<p>My goals in this talk:</p>
 					
 					<ul>
-						<li>Understand what Azure Synapse Analytics serverless SQL pools are.</li>
-						<li>Load data into a serverless SQL pool.</li>
-						<li>Query data in serverless SQL pools.</li>
+						<li>Understand what the Azure Synapse Analytics serverless SQL pool is.</li>
+						<li>Load data into the serverless SQL pool.</li>
+						<li>Query data in the serverless SQL pool.</li>
 						<li>Get a feeling for how much all of this will cost.</li>
 					</ul>
 				</section>
@@ -82,14 +82,15 @@
 				<section data-background-image="presentation/assets/background/warehouse.jpg" data-background-opacity="0.2">
 					<h3>Azure Synapse Analytics</h3>
 					
-					<p>Azure Synapse Analytics is Microsoft's platform for modern data warehousing.  It is made up of three components:</p>
+					<p>Azure Synapse Analytics is Microsoft's platform for modern data warehousing.  It is made up of four components:</p>
 					
 					<div class="container">
 						<div class="col">
 							<ul>
 								<li>Dedicated SQL pools</li>
 								<li>Spark pools</li>
-								<li>Serverless SQL pools</li>
+								<li>Serverless SQL pool</li>
+								<li>Data explorer pools (preview)</li>
 							</ul>
 						</div>
 						<div class="col">
@@ -137,9 +138,9 @@
 				</section>
 				
 				<section data-background-image="presentation/assets/background/magnifying-glass.jpg" data-background-opacity="0.2">
-					<h3>Serverless SQL pools</h3>
+					<h3>Serverless SQL pool</h3>
 					
-					<p>Key use cases for Azure Synapse Analytics serverless SQL pools include:</p>
+					<p>Key use cases for the Azure Synapse Analytics serverless SQL pool include:</p>
 
 					<ul>
 						<li>Data "spelunking:"  investigatory work on data in the data lake.</li>
@@ -147,6 +148,12 @@
 						<li>Simple data transformations and cleanup as part of data curation.</li>
 						<li>Reviewing data processed in Spark pools.</li>
 					</ul>
+				</section>
+				
+				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
+					<h3>Data Explorer pools</h3>
+					
+					<p>Data Explorer pools allow you to perform real-time analysis on large volumes of data.  The initial use case of this was to process log data, but using the Kusto Query Language (KQL), we can also perform detailed time series analysis, whether real-time or off of already-stored data.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
@@ -208,13 +215,13 @@
 
 					<p>Our job is to collect sensor data from agricultural plots in several Martian cities in order better to understand which plots of land are best suited for specific crops.</p>
 					
-					<p>Our system has collected a significant amount of IoT sensor data and management would like us to build a rapid access system for reviewing this data.  We have chosen Azure Synapse Analytics serverless SQL pools for the job.</p>
+					<p>Our system has collected a significant amount of IoT sensor data and management would like us to build a rapid access system for reviewing this data.  We have chosen the Azure Synapse Analytics serverless SQL pool for the job.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/background/telephones.jpg" data-background-opacity="0.2">
 					<h3>What Language Do We Use?</h3>
 					
-					<p>Serverless SQL pools allow you to write T-SQL queries.  But the product does not support the entire T-SQL namespace.</p>
+					<p>The serverless SQL pool allows you to write T-SQL queries.  But the product does not support the entire T-SQL namespace.</p>
 					
 					<p>One major reason for this is that serverless SQL pools are (almost entirely) <strong>read-only</strong>.</p>
 				</section>
@@ -369,7 +376,7 @@
 				<section data-background-image="presentation/assets/background/table.jpg" data-background-opacity="0.2">
 					<h3>External Table</h3>
 					
-					<p>An external table tells your serverless SQL pool the structure of your external resource.  Serverless SQL pools require <strong>structured</strong> data and will reject records which do not fit the data types and sizes you set.</p>
+					<p>An external table tells your serverless SQL pool the structure of your external resource.  The serverless SQL pool requires <strong>structured</strong> data and will reject records which do not fit the data types and sizes you set.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
@@ -443,7 +450,7 @@
 				<section data-background-image="presentation/assets/background/fishing.jpg" data-background-opacity="0.2">
 					<h3>Spelunking</h3>
 					
-					<p>Serverless SQL pools are great for ad hoc data exploration.  They allow you to query arbitrary files or folders within a data lake, shape that data using T-SQL, and display or export the data in several ways.</p>
+					<p>The serverless SQL pool is great for ad hoc data exploration.  They allow you to query arbitrary files or folders within a data lake, shape that data using T-SQL, and display or export the data in several ways.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/background/magnifying-glass.jpg" data-background-opacity="0.2">
@@ -665,7 +672,7 @@
 				<section data-background-image="presentation/assets/background/stoplight.jpg" data-background-opacity="0.2">
 					<h3>Security Options</h3>
 					
-					<p>Serverless SQL pools don't have the same breadth of security options and roles as on-premises SQL Server instances, but there are still ways to control access to data.</p>
+					<p>The serverless SQL pool doesn't have the same breadth of security options and roles as on-premises SQL Server instances, but there are still ways to control access to data.</p>
 					
 					<ul>
 						<li>Controlling the underlying data</li>
@@ -702,7 +709,7 @@
 				<section data-background-image="presentation/assets/image/Bubbles.jpg" data-background-opacity="0.4">
 					<h3>Role-Based Security</h3>
 					
-					<p>Serverless SQL pools allow you to create distinct roles and assign users to them, just as you can on-premises.</p>
+					<p>The serverless SQL pool allows you to create distinct roles and assign users to them, just as you can on-premises.</p>
 					
 					<pre><code data-line-numbers="|1-3|4" data-trim><script type="text/template">
 					CREATE ROLE Analysts;
@@ -829,7 +836,7 @@
 				<section data-background-image="presentation/assets/background/coins.jpg" data-background-opacity="0.2">
 					<h3>How Much Does this Cost?</h3>
 					
-					<p>The different components of Azure Synapse Analytics are priced differently.  Although dedicated SQL pools and Spark pools are priced by server utilization, serverless SQL pools are priced by data processed, at a rate of approximately $5 per terabyte processed.</p>
+					<p>The different components of Azure Synapse Analytics are priced differently.  Although dedicated SQL pools and Spark pools are priced by server utilization, the serverless SQL pool is priced by data processed, at a rate of approximately $5 per terabyte processed.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/background/process.jpg" data-background-opacity="0.2">
@@ -843,7 +850,7 @@
 				<section data-background-image="presentation/assets/background/calculator.jpg" data-background-opacity="0.2">
 					<h3>How Do We Save Money?</h3>
 					
-					<p>We know that scanning the minimum amount of data necessary is a key for maximizing performance.  It's also our key for saving money here.  Serverless SQL pools offer a few techniques for doing this:</p>
+					<p>We know that scanning the minimum amount of data necessary is a key for maximizing performance.  It's also our key for saving money here.  The serverless SQL pool offers a few techniques for doing this:</p>
 					
 					<ul>
 						<li>Using the right file format</li>
@@ -892,7 +899,7 @@
 				<section data-background-image="presentation/assets/background/plan.jpg" data-background-opacity="0.2">
 					<h3>Pre-Processing Data</h3>
 					
-					<p>Sometimes, in order to improve performance, serverless SQL pools will process more data than absolutely necessary.  For example, the CSV reader pulls in data in chunks, and although you only asked for 5 rows, the chunk might contain 50 or 100.  The net effects of this are typically small, but can add up with a large number of queries.</p>
+					<p>Sometimes, in order to improve performance, the serverless SQL pool will process more data than absolutely necessary.  For example, the CSV reader pulls in data in chunks, and although you only asked for 5 rows, the chunk might contain 50 or 100.  The net effects of this are typically small, but can add up with a large number of queries.</p>
 					
 					<p>To reduce this, store data in Parquet format and write queries which intend to read from an entire file rather than part of the file.  This might include reshaping files in your data lake.</p>
 				</section>
@@ -910,7 +917,7 @@
 				<section data-background-image="presentation/assets/background/wrappingup.jpg" data-background-opacity="0.2">
 					<h3>Wrapping Up</h3>
 					
-					<p>This has been a look at serverless SQL pools in Azure Synapse Analytics.  Although they are in the SQL Server family, they're closer to second cousins with on-premises SQL Server rather than twins.</p>
+					<p>This has been a look at the serverless SQL pool in Azure Synapse Analytics.  Although it is in the SQL Server family, it's closer to second cousins with on-premises SQL Server rather than a twin.</p>
 				</section>
 				
 				<section data-background-image="presentation/assets/background/wrappingup.jpg" data-background-opacity="0.2">
